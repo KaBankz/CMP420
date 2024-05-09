@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model authors {
+  books_id Int
+  name     String @db.VarChar(20)
+  books    books  @relation(fields: [books_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authors_ibfk_1")
+
+  @@id([books_id, name])
+}
+
+model books {
+  id      Int       @id @unique(map: "id")
+  title   String    @db.VarChar(50)
+  item_id Int
+  item    item      @relation(fields: [item_id], references: [item_id], onDelete: NoAction, onUpdate: NoAction, map: "books_ibfk_1")
+  authors authors[]
+
+  @@index([item_id], map: "item_id")
+}
+
+model coordinator {
+  employee_emplid Int      @id
+  employee        employee @relation(fields: [employee_emplid], references: [emplid], onDelete: NoAction, onUpdate: NoAction, map: "coordinator_ibfk_1")
+}
+
+model course {
+  name            String   @id @unique(map: "name") @db.VarChar(20)
+  title           String   @db.VarChar(50)
+  description     String   @db.VarChar(100)
+  credits         Int
+  hours           Int
+  employee_emplid Int
+  employee        employee @relation(fields: [employee_emplid], references: [emplid], onDelete: NoAction, onUpdate: NoAction, map: "course_ibfk_1")
+  visits          visits[]
+
+  @@index([employee_emplid], map: "employee_emplid")
+}
+
+model employee {
+  emplid                     Int          @id @unique(map: "emplid")
+  first_name                 String       @db.VarChar(20)
+  last_name                  String       @db.VarChar(20)
+  title                      String       @db.VarChar(20)
+  phone_number               String       @db.Char(12)
+  email                      String       @db.VarChar(30)
+  address                    String       @db.VarChar(50)
+  sex                        String       @db.Char(1)
+  date_of_birth              DateTime     @db.Date
+  date_of_hire               DateTime     @db.Date
+  hourly_rate                Int
+  total_weekly_working_hours Int
+  coordinator                coordinator?
+  course                     course[]
+  item                       item[]
+  tutor                      tutor?
+}
+
+model item {
+  item_id         Int       @id @unique(map: "item_id")
+  employee_emplid Int
+  employee        employee  @relation(fields: [employee_emplid], references: [emplid], onDelete: NoAction, onUpdate: NoAction, map: "item_ibfk_1")
+  books           books[]
+  laptops         laptops[]
+
+  @@index([employee_emplid], map: "employee_emplid")
+}
+
+model laptops {
+  serial_number String @id @unique(map: "serial_number") @db.VarChar(20)
+  name          String @db.VarChar(20)
+  manufacturer  String @db.VarChar(20)
+  item_id       Int
+  item          item   @relation(fields: [item_id], references: [item_id], onDelete: NoAction, onUpdate: NoAction, map: "laptops_ibfk_1")
+
+  @@index([item_id], map: "item_id")
+}
+
+model tutee {
+  emplid       Int      @id @unique(map: "emplid")
+  first_name   String   @db.VarChar(20)
+  last_name    String   @db.VarChar(20)
+  phone_number String   @db.Char(12)
+  email        String   @db.VarChar(30)
+  address      String   @db.VarChar(50)
+  visits       visits[]
+}
+
+model tutor {
+  employee_emplid Int      @id
+  employee        employee @relation(fields: [employee_emplid], references: [emplid], onDelete: NoAction, onUpdate: NoAction, map: "tutor_ibfk_1")
+}
+
+model visit_time {
+  visit_id      Int      @id @unique(map: "visit_id")
+  date_of_visit DateTime @db.Date
+  time_in       DateTime @db.Time(0)
+  time_out      DateTime @db.Time(0)
+  visits        visits   @relation(fields: [visit_id], references: [visit_id], onDelete: NoAction, onUpdate: NoAction, map: "visit_time_ibfk_1")
+}
+
+model visits {
+  visit_id              Int         @id @unique(map: "visit_id")
+  reason                String      @db.VarChar(50)
+  course                String      @db.VarChar(20)
+  tutee_emplid          Int
+  course_courseTovisits course      @relation(fields: [course], references: [name], onDelete: NoAction, onUpdate: NoAction, map: "visits_ibfk_1")
+  tutee                 tutee       @relation(fields: [tutee_emplid], references: [emplid], onDelete: NoAction, onUpdate: NoAction, map: "visits_ibfk_2")
+  visit_time            visit_time?
+
+  @@index([course], map: "course")
+  @@index([tutee_emplid], map: "tutee_emplid")
+}
